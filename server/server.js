@@ -161,13 +161,26 @@ process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);
 
 if (process.env.NODE_ENV !== 'test') {
-  app.listen(PORT, () => {
+  app.listen(PORT, async () => {
     console.log(`===========================================`);
     console.log(` 🚀 TEZ THAILA BACKEND API SERVER RUNNING`);
     console.log(` 🌐 URL: http://localhost:${PORT}`);
     console.log(` 🩺 Health: http://localhost:${PORT}/api/health`);
     console.log(` 📦 Environment: ${process.env.NODE_ENV || 'development'}`);
     console.log(`===========================================`);
+
+    // Auto-seed database if empty
+    try {
+      const userCount = await prisma.user.count();
+      if (userCount === 0) {
+        console.log('🌱 Cloud database is empty (0 users found). Auto-seeding initial database...');
+        const { runSeed } = await import('./prisma/seed.js');
+        await runSeed();
+        console.log('✅ Initial database seed completed successfully!');
+      }
+    } catch (seedErr) {
+      console.warn('[DB] Auto-seed check note:', seedErr.message);
+    }
   });
 }
 

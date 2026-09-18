@@ -437,11 +437,17 @@ async function main() {
   console.log('--------------------------------------------------');
 }
 
-main()
-  .catch((e) => {
-    console.error('❌ Error executing seed:', e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+export async function runSeed() {
+  await main();
+}
+
+if (process.argv[1] && (process.argv[1].endsWith('seed.js') || process.argv[1].includes('seed'))) {
+  main()
+    .catch((e) => {
+      console.error('❌ Error executing seed:', e);
+      process.exit(1);
+    })
+    .finally(async () => {
+      await prisma.$disconnect();
+    });
+}
