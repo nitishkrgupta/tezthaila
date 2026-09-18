@@ -153,6 +153,14 @@ export class ApiService {
     );
   }
 
+  createCategory(data: { name: string; description?: string; image?: string }): Observable<ApiResponse<Category>> {
+    return this.http.post<ApiResponse<Category>>(`${this.baseUrl}/categories`, data);
+  }
+
+  createSubcategory(data: { categoryId: number; name: string; description?: string }): Observable<ApiResponse<Subcategory>> {
+    return this.http.post<ApiResponse<Subcategory>>(`${this.baseUrl}/categories/subcategories`, data);
+  }
+
   getBrands(): Observable<ApiResponse<Brand[]>> {
     return this.http.get<ApiResponse<Brand[]>>(`${this.baseUrl}/brands`).pipe(
       catchError(() => of({ success: true, data: INITIAL_BRANDS }))

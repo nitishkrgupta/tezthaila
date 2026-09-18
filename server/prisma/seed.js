@@ -136,8 +136,86 @@ async function main() {
 
   const categoryMap = {};
   for (const cat of categoriesData) {
-    const created = await prisma.category.create({ data: cat });
-    categoryMap[cat.slug] = created.id;
+    let existing = await prisma.category.findUnique({ where: { slug: cat.slug } });
+    if (!existing) {
+      existing = await prisma.category.create({ data: cat });
+    }
+    categoryMap[cat.slug] = existing.id;
+  }
+
+  // 5b. Create Subcategories
+  console.log('📂 Creating subcategories...');
+  const subcategoriesData = [
+    // Groceries & Staples
+    { categorySlug: 'groceries-staples', name: 'Rice & Grains', slug: 'rice-grains' },
+    { categorySlug: 'groceries-staples', name: 'Pulses & Dals', slug: 'pulses-dals' },
+    { categorySlug: 'groceries-staples', name: 'Atta & Flours', slug: 'atta-flours' },
+    { categorySlug: 'groceries-staples', name: 'Edible Oils & Ghee', slug: 'edible-oils-ghee' },
+    { categorySlug: 'groceries-staples', name: 'Spices & Masalas', slug: 'spices-masalas' },
+    { categorySlug: 'groceries-staples', name: 'Salt, Sugar & Jaggery', slug: 'salt-sugar-jaggery' },
+    { categorySlug: 'groceries-staples', name: 'Dry Fruits & Nuts', slug: 'dry-fruits-nuts' },
+    // Dairy & Breakfast
+    { categorySlug: 'dairy-breakfast', name: 'Milk & Cream', slug: 'milk-cream' },
+    { categorySlug: 'dairy-breakfast', name: 'Butter & Ghee', slug: 'butter-ghee' },
+    { categorySlug: 'dairy-breakfast', name: 'Paneer & Curd', slug: 'paneer-curd' },
+    { categorySlug: 'dairy-breakfast', name: 'Cheese', slug: 'cheese' },
+    { categorySlug: 'dairy-breakfast', name: 'Bread & Bakery', slug: 'bread-bakery' },
+    { categorySlug: 'dairy-breakfast', name: 'Breakfast Cereals & Oats', slug: 'cereals-oats' },
+    { categorySlug: 'dairy-breakfast', name: 'Eggs', slug: 'eggs' },
+    // Fresh Fruits & Vegetables
+    { categorySlug: 'fresh-fruits-vegetables', name: 'Fresh Vegetables', slug: 'fresh-vegetables' },
+    { categorySlug: 'fresh-fruits-vegetables', name: 'Fresh Fruits', slug: 'fresh-fruits' },
+    { categorySlug: 'fresh-fruits-vegetables', name: 'Leafy Greens & Herbs', slug: 'leafy-greens-herbs' },
+    { categorySlug: 'fresh-fruits-vegetables', name: 'Exotic Fruits & Veggies', slug: 'exotic-fruits-veggies' },
+    // Snacks & Beverages
+    { categorySlug: 'snacks-beverages', name: 'Biscuits & Cookies', slug: 'biscuits-cookies' },
+    { categorySlug: 'snacks-beverages', name: 'Namkeen & Snacks', slug: 'namkeen-snacks' },
+    { categorySlug: 'snacks-beverages', name: 'Tea & Coffee', slug: 'tea-coffee' },
+    { categorySlug: 'snacks-beverages', name: 'Soft Drinks & Juices', slug: 'soft-drinks-juices' },
+    { categorySlug: 'snacks-beverages', name: 'Chocolates & Sweets', slug: 'chocolates-sweets' },
+    { categorySlug: 'snacks-beverages', name: 'Instant Noodles & Pasta', slug: 'noodles-pasta' },
+    // Personal Care
+    { categorySlug: 'personal-care', name: 'Bath & Body', slug: 'bath-body' },
+    { categorySlug: 'personal-care', name: 'Hair Care', slug: 'hair-care' },
+    { categorySlug: 'personal-care', name: 'Skin Care', slug: 'skin-care' },
+    { categorySlug: 'personal-care', name: 'Oral Care', slug: 'oral-care' },
+    { categorySlug: 'personal-care', name: 'Deodorants & Perfumes', slug: 'deodorants-perfumes' },
+    { categorySlug: 'personal-care', name: 'Shaving & Grooming', slug: 'shaving-grooming' },
+    // Household & Cleaning
+    { categorySlug: 'household-cleaning', name: 'Detergents & Fabric Care', slug: 'detergents-fabric-care' },
+    { categorySlug: 'household-cleaning', name: 'Dishwashing', slug: 'dishwashing' },
+    { categorySlug: 'household-cleaning', name: 'Cleaners & Disinfectants', slug: 'cleaners-disinfectants' },
+    { categorySlug: 'household-cleaning', name: 'Fresheners & Repellents', slug: 'fresheners-repellents' },
+    { categorySlug: 'household-cleaning', name: 'Cleaning Tools & Mops', slug: 'cleaning-tools' },
+    // Electronics & Audio
+    { categorySlug: 'electronics-audio', name: 'Headphones & Earphones', slug: 'headphones-earphones' },
+    { categorySlug: 'electronics-audio', name: 'Chargers & Cables', slug: 'chargers-cables' },
+    { categorySlug: 'electronics-audio', name: 'Mobile Accessories', slug: 'mobile-accessories' },
+    { categorySlug: 'electronics-audio', name: 'Smart Watches & Bands', slug: 'smart-watches' },
+    { categorySlug: 'electronics-audio', name: 'Bluetooth Speakers', slug: 'bluetooth-speakers' },
+    // Kitchen & Dining
+    { categorySlug: 'kitchen-dining', name: 'Cookware & Pans', slug: 'cookware-pans' },
+    { categorySlug: 'kitchen-dining', name: 'Storage & Containers', slug: 'storage-containers' },
+    { categorySlug: 'kitchen-dining', name: 'Kitchen Tools & Cutlery', slug: 'kitchen-tools-cutlery' },
+    { categorySlug: 'kitchen-dining', name: 'Bottles & Flasks', slug: 'bottles-flasks' }
+  ];
+
+  for (const sub of subcategoriesData) {
+    const catId = categoryMap[sub.categorySlug];
+    if (catId) {
+      const existingSub = await prisma.subcategory.findFirst({
+        where: { categoryId: catId, slug: sub.slug }
+      });
+      if (!existingSub) {
+        await prisma.subcategory.create({
+          data: {
+            categoryId: catId,
+            name: sub.name,
+            slug: sub.slug
+          }
+        });
+      }
+    }
   }
 
   // 6. Create Brands

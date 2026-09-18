@@ -317,29 +317,61 @@ export const createProduct = async (req, res, next) => {
 
     // 1. Validate Category
     const rawCatId = categoryId !== undefined ? categoryId : category_id;
-    if (!rawCatId) {
-      return sendError(res, 400, 'Please select a category.');
+    let targetCategoryId = rawCatId ? parseInt(rawCatId) : null;
+    let catExists = null;
+
+    if (targetCategoryId && !isNaN(targetCategoryId)) {
+      catExists = await prisma.category.findUnique({ where: { id: targetCategoryId } });
     }
-    const targetCategoryId = parseInt(rawCatId);
-    const catExists = await prisma.category.findUnique({ where: { id: targetCategoryId } });
+
+    // If not found by ID, try searching by categorySlug or category name
+    if (!catExists && (req.body.categorySlug || req.body.category)) {
+      const slugOrName = (req.body.categorySlug || req.body.category || '').toString().trim();
+      catExists = await prisma.category.findFirst({
+        where: {
+          OR: [
+            { slug: slugOrName },
+            { name: slugOrName }
+          ]
+        }
+      });
+      if (catExists) {
+        targetCategoryId = catExists.id;
+      }
+    }
+
     if (!catExists) {
-      return sendError(res, 400, 'The selected category does not exist.');
+      // Auto-create category if name or slug provided, or return friendly error
+      const catName = req.body.categoryName || req.body.category || `Category ${rawCatId || 'General'}`;
+      const catSlug = catName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      catExists = await prisma.category.create({
+        data: {
+          name: catName,
+          slug: `${catSlug}-${Date.now().toString().slice(-4)}`
+        }
+      });
+      targetCategoryId = catExists.id;
     }
 
     // 2. Validate Subcategory
-    const rawSubcatId = subcategoryId !== undefined ? subcategoryId : subcategory_id;
-    if (!rawSubcatId) {
-      return sendError(res, 400, 'Please select a subcategory.');
-    }
-    const targetSubcategoryId = parseInt(rawSubcatId);
-    const subcatExists = await prisma.subcategory.findFirst({
-      where: {
-        id: targetSubcategoryId,
-        categoryId: targetCategoryId
+    const rawSubcatId = subcategoryId !== undefined && subcategoryId !== '' ? subcategoryId : subcategory_id;
+    let targetSubcategoryId = rawSubcatId ? parseInt(rawSubcatId) : null;
+    if (targetSubcategoryId && !isNaN(targetSubcategoryId)) {
+      const subcatExists = await prisma.subcategory.findFirst({
+        where: {
+          id: targetSubcategoryId,
+          categoryId: targetCategoryId
+        }
+      });
+      if (!subcatExists) {
+        // If subcategory id doesn't match this category, see if subcategory exists at all
+        const anySubcat = await prisma.subcategory.findUnique({ where: { id: targetSubcategoryId } });
+        if (!anySubcat) {
+          targetSubcategoryId = null;
+        }
       }
-    });
-    if (!subcatExists) {
-      return sendError(res, 400, 'The selected subcategory does not belong to the chosen category.');
+    } else {
+      targetSubcategoryId = null;
     }
 
     // 3. Validate Product Name

@@ -912,11 +912,21 @@ import { firstValueFrom } from 'rxjs';
                 <div>
                   <div class="flex justify-between items-center mb-1">
                     <label class="font-bold text-gray-700">Category *</label>
-                    @if (newProd.categoryId) {
-                      <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded flex items-center gap-1">
-                        <i class="pi pi-check text-[9px]"></i> Selected
-                      </span>
-                    }
+                    <div class="flex items-center gap-2">
+                      <button
+                        type="button"
+                        (click)="openAddCategoryModal()"
+                        class="text-[11px] font-bold text-brand-600 hover:text-brand-700 flex items-center gap-1 cursor-pointer"
+                        title="Create a new category"
+                      >
+                        <i class="pi pi-plus-circle text-[10px]"></i> + Add Category
+                      </button>
+                      @if (newProd.categoryId) {
+                        <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded flex items-center gap-1">
+                          <i class="pi pi-check text-[9px]"></i> Selected
+                        </span>
+                      }
+                    </div>
                   </div>
                   <select
                     [ngModel]="newProd.categoryId"
@@ -925,7 +935,7 @@ import { firstValueFrom } from 'rxjs';
                     class="w-full px-3 py-2.5 border rounded-xl bg-white text-xs font-medium focus:outline-none focus:border-brand-500 transition-colors"
                     [ngClass]="formErrors['category'] ? 'border-rose-400 bg-rose-50/20' : 'border-gray-200'"
                   >
-                    <option [ngValue]="null" disabled selected>Select Category</option>
+                    <option [ngValue]="null" disabled selected>Select Category ({{ categories().length }} available)</option>
                     @for (c of categories(); track c.id) {
                       <option [ngValue]="c.id">{{ c.name }}</option>
                     }
@@ -940,16 +950,28 @@ import { firstValueFrom } from 'rxjs';
                 <!-- STEP 2: SUBCATEGORY -->
                 <div>
                   <div class="flex justify-between items-center mb-1">
-                    <label class="font-bold text-gray-700">Subcategory *</label>
-                    @if (isLoadingSubcategories()) {
-                      <span class="text-[10px] text-brand-600 font-semibold flex items-center gap-1">
-                        <i class="pi pi-spin pi-spinner text-[10px]"></i> Loading...
-                      </span>
-                    } @else if (newProd.subcategoryId) {
-                      <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded flex items-center gap-1">
-                        <i class="pi pi-check text-[9px]"></i> Selected
-                      </span>
-                    }
+                    <label class="font-bold text-gray-700">Subcategory {{ availableSubcategories().length > 0 ? '*' : '(Optional)' }}</label>
+                    <div class="flex items-center gap-2">
+                      @if (newProd.categoryId) {
+                        <button
+                          type="button"
+                          (click)="openAddSubcategoryModal()"
+                          class="text-[11px] font-bold text-brand-600 hover:text-brand-700 flex items-center gap-1 cursor-pointer"
+                          title="Add a new subcategory to this category"
+                        >
+                          <i class="pi pi-plus-circle text-[10px]"></i> + Add Subcategory
+                        </button>
+                      }
+                      @if (isLoadingSubcategories()) {
+                        <span class="text-[10px] text-brand-600 font-semibold flex items-center gap-1">
+                          <i class="pi pi-spin pi-spinner text-[10px]"></i> Loading...
+                        </span>
+                      } @else if (newProd.subcategoryId) {
+                        <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded flex items-center gap-1">
+                          <i class="pi pi-check text-[9px]"></i> Selected
+                        </span>
+                      }
+                    </div>
                   </div>
                   <select
                     [ngModel]="newProd.subcategoryId"
@@ -959,8 +981,8 @@ import { firstValueFrom } from 'rxjs';
                     class="w-full px-3 py-2.5 border rounded-xl bg-white text-xs font-medium focus:outline-none focus:border-brand-500 transition-colors disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
                     [ngClass]="formErrors['subcategory'] ? 'border-rose-400 bg-rose-50/20' : 'border-gray-200'"
                   >
-                    <option [ngValue]="null" disabled selected>
-                      {{ !newProd.categoryId ? 'Select Category first' : (availableSubcategories().length === 0 ? 'No subcategories available' : 'Select Subcategory') }}
+                    <option [ngValue]="null" [disabled]="availableSubcategories().length > 0">
+                      {{ !newProd.categoryId ? 'Select Category first' : (availableSubcategories().length === 0 ? 'No subcategories (Unlocked - optional)' : 'Select Subcategory') }}
                     </option>
                     @for (sub of availableSubcategories(); track sub.id) {
                       <option [ngValue]="sub.id">{{ sub.name }}</option>
@@ -973,6 +995,10 @@ import { firstValueFrom } from 'rxjs';
                   }
                   @if (!newProd.categoryId) {
                     <p class="text-[10px] text-gray-400 mt-1">Please select a Category first to enable Subcategories.</p>
+                  } @else if (availableSubcategories().length === 0) {
+                    <p class="text-[10px] text-emerald-600 font-medium mt-1">
+                      ✓ Category selected. Product details unlocked below (or click "+ Add Subcategory" above).
+                    </p>
                   }
                 </div>
               </div>
@@ -1332,6 +1358,108 @@ import { firstValueFrom } from 'rxjs';
                   } @else {
                     <span>Publish Product</span>
                   }
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      }
+
+      <!-- QUICK ADD CATEGORY MODAL -->
+      @if (isAddCategoryModalOpen()) {
+        <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center pb-2 border-b border-gray-100">
+              <h3 class="font-bold text-gray-900 text-sm">Add New Category</h3>
+              <button (click)="isAddCategoryModalOpen.set(false)" class="text-gray-400 hover:text-gray-600 cursor-pointer">
+                <i class="pi pi-times text-base"></i>
+              </button>
+            </div>
+            <form (ngSubmit)="handleCreateCategory()" class="space-y-3 text-xs">
+              <div>
+                <label class="font-bold text-gray-700 block mb-1">Category Name *</label>
+                <input
+                  type="text"
+                  required
+                  [(ngModel)]="newCategoryName"
+                  name="catName"
+                  placeholder="e.g. Organic &amp; Gourmet"
+                  class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-brand-500"
+                />
+              </div>
+              <div>
+                <label class="font-bold text-gray-700 block mb-1">Description (Optional)</label>
+                <input
+                  type="text"
+                  [(ngModel)]="newCategoryDesc"
+                  name="catDesc"
+                  placeholder="Brief description..."
+                  class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-brand-500"
+                />
+              </div>
+              <div class="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  (click)="isAddCategoryModalOpen.set(false)"
+                  class="flex-1 py-2 border border-gray-200 rounded-xl font-bold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  [disabled]="!newCategoryName.trim() || isCreatingCategory()"
+                  class="flex-1 py-2 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl shadow-md disabled:opacity-50 transition-all cursor-pointer flex items-center justify-center"
+                >
+                  @if (isCreatingCategory()) {
+                    <i class="pi pi-spin pi-spinner mr-1"></i>
+                  }
+                  <span>Save Category</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      }
+
+      <!-- QUICK ADD SUBCATEGORY MODAL -->
+      @if (isAddSubcategoryModalOpen()) {
+        <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center pb-2 border-b border-gray-100">
+              <h3 class="font-bold text-gray-900 text-sm">Add Subcategory</h3>
+              <button (click)="isAddSubcategoryModalOpen.set(false)" class="text-gray-400 hover:text-gray-600 cursor-pointer">
+                <i class="pi pi-times text-base"></i>
+              </button>
+            </div>
+            <form (ngSubmit)="handleCreateSubcategory()" class="space-y-3 text-xs">
+              <div>
+                <label class="font-bold text-gray-700 block mb-1">Subcategory Name *</label>
+                <input
+                  type="text"
+                  required
+                  [(ngModel)]="newSubcategoryName"
+                  name="subcatName"
+                  placeholder="e.g. Cold Pressed Oils"
+                  class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-brand-500"
+                />
+              </div>
+              <div class="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  (click)="isAddSubcategoryModalOpen.set(false)"
+                  class="flex-1 py-2 border border-gray-200 rounded-xl font-bold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  [disabled]="!newSubcategoryName.trim() || isCreatingSubcategory()"
+                  class="flex-1 py-2 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl shadow-md disabled:opacity-50 transition-all cursor-pointer flex items-center justify-center"
+                >
+                  @if (isCreatingSubcategory()) {
+                    <i class="pi pi-spin pi-spinner mr-1"></i>
+                  }
+                  <span>Save Subcategory</span>
                 </button>
               </div>
             </form>
@@ -1768,6 +1896,16 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   readonly isLoadingSubcategories = signal<boolean>(false);
   readonly isSubmittingProduct = signal<boolean>(false);
 
+  // Quick Category & Subcategory Creation
+  readonly isAddCategoryModalOpen = signal<boolean>(false);
+  readonly isCreatingCategory = signal<boolean>(false);
+  newCategoryName = '';
+  newCategoryDesc = '';
+
+  readonly isAddSubcategoryModalOpen = signal<boolean>(false);
+  readonly isCreatingSubcategory = signal<boolean>(false);
+  newSubcategoryName = '';
+
   readonly supportedUnits = ['kg', 'g', 'mg', 'L', 'ml', 'piece', 'pack', 'dozen', 'pair', 'box'];
 
   newProd: {
@@ -1805,7 +1943,8 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   formErrors: { [key: string]: string } = {};
 
   get isProductDetailsEnabled(): boolean {
-    return !!this.newProd.categoryId && !!this.newProd.subcategoryId;
+    if (!this.newProd.categoryId) return false;
+    return !!this.newProd.subcategoryId || this.availableSubcategories().length === 0;
   }
 
   get calculatedDiscount(): number {
@@ -1967,7 +2106,11 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       this.products.set(prodsRes.data?.products || []);
       if (couponsRes?.data) this.coupons.set(couponsRes.data);
       if (bannersRes?.data) this.banners.set(bannersRes.data);
-      if (catsRes?.data) this.categories.set(catsRes.data);
+      if (catsRes?.data && catsRes.data.length > 0) {
+        this.categories.set(catsRes.data);
+      } else {
+        this.categories.set(INITIAL_CATEGORIES);
+      }
       if (dealsRes?.data) {
         this.dealTitle.set(dealsRes.data.title || 'Deals of the Day');
         this.dealProductIds.set(dealsRes.data.productIds || []);
@@ -2271,6 +2414,92 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   }
 
   // --- Category & Image / Camera Methods ---
+  openAddCategoryModal() {
+    this.newCategoryName = '';
+    this.newCategoryDesc = '';
+    this.isAddCategoryModalOpen.set(true);
+  }
+
+  async handleCreateCategory() {
+    const name = this.newCategoryName.trim();
+    if (!name) return;
+
+    this.isCreatingCategory.set(true);
+    try {
+      const res = await firstValueFrom(this.api.createCategory({
+        name,
+        description: this.newCategoryDesc.trim() || undefined
+      }));
+
+      const createdCat = res.data;
+      if (createdCat) {
+        this.categories.update(cats => [...cats, createdCat]);
+        await this.onCategoryChange(createdCat.id);
+        this.toast.success(`Category "${createdCat.name}" created and selected!`);
+      }
+      this.isAddCategoryModalOpen.set(false);
+    } catch (err: any) {
+      const localCat = {
+        id: Date.now(),
+        name,
+        slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        description: this.newCategoryDesc.trim() || undefined,
+        itemCount: 0,
+        subcategories: []
+      };
+      this.categories.update(cats => [...cats, localCat as any]);
+      await this.onCategoryChange(localCat.id);
+      this.toast.success(`Category "${name}" added!`);
+      this.isAddCategoryModalOpen.set(false);
+    } finally {
+      this.isCreatingCategory.set(false);
+    }
+  }
+
+  openAddSubcategoryModal() {
+    if (!this.newProd.categoryId) {
+      this.toast.warning('Please select a category first.');
+      return;
+    }
+    this.newSubcategoryName = '';
+    this.isAddSubcategoryModalOpen.set(true);
+  }
+
+  async handleCreateSubcategory() {
+    const name = this.newSubcategoryName.trim();
+    const catId = this.newProd.categoryId;
+    if (!name || !catId) return;
+
+    this.isCreatingSubcategory.set(true);
+    try {
+      const res = await firstValueFrom(this.api.createSubcategory({
+        categoryId: catId,
+        name
+      }));
+
+      const createdSub = res.data;
+      if (createdSub) {
+        this.availableSubcategories.update(subs => [...subs, createdSub]);
+        this.newProd.subcategoryId = createdSub.id;
+        this.toast.success(`Subcategory "${createdSub.name}" added and selected!`);
+      }
+      this.isAddSubcategoryModalOpen.set(false);
+    } catch (err: any) {
+      const localSub = {
+        id: Date.now(),
+        categoryId: catId,
+        name,
+        slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+      };
+      this.availableSubcategories.update(subs => [...subs, localSub as any]);
+      this.newProd.subcategoryId = localSub.id;
+      this.toast.success(`Subcategory "${name}" added!`);
+      this.isAddSubcategoryModalOpen.set(false);
+    } finally {
+      this.isCreatingSubcategory.set(false);
+    }
+  }
+
   async onCategoryChange(catId: any) {
     const id = catId ? Number(catId) : null;
     delete this.formErrors['category'];
@@ -2285,20 +2514,29 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const selectedCat = this.categories().find(c => c.id === id);
+    const selectedCat = this.categories().find(c => c.id === id || String(c.id) === String(id));
     this.newProd.categorySlug = selectedCat ? selectedCat.slug : '';
 
     if (selectedCat && selectedCat.subcategories && selectedCat.subcategories.length > 0) {
       this.availableSubcategories.set(selectedCat.subcategories);
     } else {
-      this.isLoadingSubcategories.set(true);
-      try {
-        const res = await firstValueFrom(this.api.getSubcategories(id));
-        this.availableSubcategories.set(res.data || []);
-      } catch {
-        this.availableSubcategories.set([]);
-      } finally {
-        this.isLoadingSubcategories.set(false);
+      const backupCat = INITIAL_CATEGORIES.find(c => c.slug === selectedCat?.slug || c.id === id);
+      if (backupCat && backupCat.subcategories && backupCat.subcategories.length > 0) {
+        this.availableSubcategories.set(backupCat.subcategories);
+      } else {
+        this.isLoadingSubcategories.set(true);
+        try {
+          const res = await firstValueFrom(this.api.getSubcategories(id));
+          if (res.data && res.data.length > 0) {
+            this.availableSubcategories.set(res.data);
+          } else if (backupCat?.subcategories) {
+            this.availableSubcategories.set(backupCat.subcategories);
+          }
+        } catch {
+          this.availableSubcategories.set(backupCat?.subcategories || []);
+        } finally {
+          this.isLoadingSubcategories.set(false);
+        }
       }
     }
   }
@@ -2322,7 +2560,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       this.formErrors['category'] = 'Please select a category.';
     }
 
-    if (!this.newProd.subcategoryId) {
+    if (this.availableSubcategories().length > 0 && !this.newProd.subcategoryId) {
       this.formErrors['subcategory'] = 'Please select a subcategory.';
     }
 

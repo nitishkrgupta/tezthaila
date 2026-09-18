@@ -34,7 +34,9 @@ export const routes: Routes = [
       { path: 'wishlist', component: WishlistPageComponent, canActivate: [authGuard] },
       { path: 'account', component: AccountPageComponent, canActivate: [authGuard] },
       { path: 'login', component: LoginPageComponent },
-      { path: 'register', component: RegisterPageComponent }
+      { path: 'auth/login', redirectTo: 'login', pathMatch: 'full' },
+      { path: 'register', component: RegisterPageComponent },
+      { path: 'auth/register', redirectTo: 'register', pathMatch: 'full' }
     ]
   },
 
