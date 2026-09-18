@@ -1,0 +1,13 @@
+{
+  "title": "Deals of the Day",
+  "durationHours": 2,
+  "endsAt": "2026-09-18T11:03:51.959Z",
+  "productIds": [
+    33,
+    34,
+    44,
+    45
+  ],
+  "isActive": true,
+  "updatedAt": "2026-09-18T06:58:13.465Z"
+}

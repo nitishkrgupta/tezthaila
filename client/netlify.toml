@@ -1,0 +1,18 @@
+# Netlify configuration for Tez Thaila Angular Client
+[build]
+  command = "npm run build"
+  publish = "dist/client-ng/browser"
+
+# SPA Catch-all rule: Allows Angular client-side router to handle all page navigations
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"

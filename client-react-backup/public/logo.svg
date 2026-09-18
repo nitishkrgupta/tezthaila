@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bagGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#047857" />
+    </linearGradient>
+    <linearGradient id="boltGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a" />
+      <stop offset="100%" stop-color="#f59e0b" />
+    </linearGradient>
+  </defs>
+  <rect width="200" height="200" rx="44" fill="#064e3b" />
+  <!-- Bag Handle -->
+  <path d="M 75 75 C 75 50, 125 50, 125 75" fill="none" stroke="#f59e0b" stroke-width="10" stroke-linecap="round" />
+  <!-- Bag Body -->
+  <path d="M 50 75 L 150 75 L 140 155 C 140 162, 134 168, 126 168 L 74 168 C 66 168, 60 162, 60 155 Z" fill="url(#bagGrad)" />
+  <!-- Speed Lightning Bolt (Tez) -->
+  <path d="M 104 88 L 84 122 L 102 122 L 96 150 L 122 114 L 104 114 Z" fill="url(#boltGrad)" />
+</svg>
