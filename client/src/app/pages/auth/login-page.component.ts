@@ -97,11 +97,19 @@ import { ToastService } from '../../services/toast.service';
           </button>
         </form>
 
-        <div class="text-center pt-2 border-t border-gray-100 dark:border-slate-800 text-xs text-gray-500 dark:text-gray-400">
-          <span>Don't have an account? </span>
-          <a routerLink="/register" class="font-bold text-brand-700 dark:text-brand-400 hover:text-brand-800 dark:hover:text-brand-300">
-            Create Account
-          </a>
+        <div class="text-center pt-2 border-t border-gray-100 dark:border-slate-800 text-xs text-gray-500 dark:text-gray-400 space-y-2">
+          <div>
+            <span>Don't have an account? </span>
+            <a routerLink="/register" class="font-bold text-brand-700 dark:text-brand-400 hover:text-brand-800 dark:hover:text-brand-300">
+              Create Account
+            </a>
+          </div>
+          <div>
+            <a routerLink="/admin/login" class="text-[11px] text-gray-400 hover:text-brand-600 dark:hover:text-brand-400 inline-flex items-center space-x-1">
+              <i class="pi pi-shield text-[10px]"></i>
+              <span>Authorized Admin Portal</span>
+            </a>
+          </div>
         </div>
       </div>
     </div>

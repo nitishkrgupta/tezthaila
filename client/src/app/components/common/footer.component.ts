@@ -180,7 +180,11 @@ import { LanguageService } from '../../services/language.service';
       <div class="border-t border-slate-800 py-6 text-center text-xs text-gray-500">
         <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p>{{ lang.t('copyright') }}</p>
-          <div class="flex items-center space-x-2">
+          <div class="flex items-center space-x-3">
+            <a routerLink="/admin/login" class="text-[11px] text-gray-400 hover:text-accent-400 flex items-center space-x-1 transition-colors">
+              <i class="pi pi-shield text-[10px]"></i>
+              <span>Admin Portal</span>
+            </a>
             <span class="text-[11px] font-semibold text-gray-400 bg-slate-800/80 px-3 py-1 rounded-full border border-slate-700/80">
               {{ lang.t('codOnlyBadge') }}
             </span>
